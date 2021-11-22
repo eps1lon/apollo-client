@@ -1,5 +1,6 @@
 import React from 'react';
 import gql from 'graphql-tag';
+import { waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 
 import { ApolloClient, InMemoryCache } from '../../../core';
@@ -17,7 +18,7 @@ describe('useLazyQuery Hook', () => {
         delay: 20,
       },
     ];
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query),
       {
         wrapper: ({ children }) => (
@@ -33,11 +34,13 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'world' });
   });
 
@@ -76,7 +79,7 @@ describe('useLazyQuery Hook', () => {
       },
     ];
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query),
       {
         wrapper: ({ children }) => (
@@ -92,12 +95,14 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
     expect(result.current[1].called).toBe(true);
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].called).toBe(true);
   });
 
@@ -111,7 +116,7 @@ describe('useLazyQuery Hook', () => {
       },
     ];
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       // skip isn’t actually an option on the types
       () => useLazyQuery(query, { skip: true } as any),
       {
@@ -128,12 +133,14 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
     expect(result.current[1].called).toBe(true);
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].called).toBe(true);
   });
 
@@ -152,7 +159,7 @@ describe('useLazyQuery Hook', () => {
       },
     ];
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query, {
         variables: { id: 1 },
       }),
@@ -168,12 +175,13 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
 
-    expect(result.current[1].loading).toBe(true);
-    await waitForNextUpdate();
-
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
   });
 
@@ -197,7 +205,7 @@ describe('useLazyQuery Hook', () => {
       },
     ];
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query, {
         variables: { id: 1 },
       }),
@@ -213,11 +221,13 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute({ variables: { id: 2 } }));
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 10 });
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    });
     expect(result.current[1].data).toEqual({ hello: 'world 2' });
   });
 
@@ -236,7 +246,7 @@ describe('useLazyQuery Hook', () => {
       },
     ];
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query, {
         fetchPolicy: 'network-only',
       }),
@@ -253,22 +263,26 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
 
     setTimeout(() => execute());
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({ hello: 'world 2' });
+    }, { interval: 1 });
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: 'world 2' });
   });
 
   it('should persist previous data when a query is re-run', async () => {
@@ -286,7 +300,7 @@ describe('useLazyQuery Hook', () => {
       },
     ];
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query, {
         notifyOnNetworkStatusChange: true,
       }),
@@ -305,26 +319,30 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].previousData).toBe(undefined);
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
     expect(result.current[1].previousData).toBe(undefined);
 
     const refetch = result.current[1].refetch;
     setTimeout(() => refetch!());
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'world 1' });
     expect(result.current[1].previousData).toEqual({ hello: 'world 1' });
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'world 2' });
     expect(result.current[1].previousData).toEqual({ hello: 'world 1' });
   });
@@ -351,7 +369,7 @@ describe('useLazyQuery Hook', () => {
       <MockedProvider mocks={mocks}>{children}</MockedProvider>
     );
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query),
       { wrapper },
     );
@@ -363,24 +381,31 @@ describe('useLazyQuery Hook', () => {
       result.current[1].startPolling(10);
     });
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({ hello: "world 1" });
+    }, { interval: 1 });
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: "world 1" });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({ hello: "world 2" });
+    }, { interval: 1 });
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: "world 2" });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current[1].data).toEqual({ hello: "world 3" });
+    }, { interval: 1 });
 
     expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toEqual({ hello: "world 3" });
 
+    const previousResult = result.current
     result.current[1].stopPolling();
-    await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+    await expect(waitFor(() => {
+      expect(result.current).not.toBe(previousResult)
+    }, { interval: 1, timeout: 20 })).rejects.toThrow('data stayed the same. this is intended');
   });
 
   it('should persist previous data when a query is re-run and variable changes', async () => {
@@ -422,7 +447,7 @@ describe('useLazyQuery Hook', () => {
       },
     ];
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(CAR_QUERY_BY_ID),
       {
         wrapper: ({ children }) => (
@@ -439,24 +464,28 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute({ variables: { id: 1 }}));
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].previousData).toBe(undefined);
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual(data1);
     expect(result.current[1].previousData).toBe(undefined);
 
     setTimeout(() => execute({ variables: { id: 2 }}));
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
     expect(result.current[1].data).toBe(undefined);
     expect(result.current[1].previousData).toEqual(data1);
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual(data2);
     expect(result.current[1].previousData).toEqual(data1);
   });
@@ -480,7 +509,7 @@ describe('useLazyQuery Hook', () => {
 
     cache.writeQuery({ query, data: { hello: 'from cache' }});
 
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query, { fetchPolicy: 'cache-and-network' }),
       {
         wrapper: ({ children }) => (
@@ -496,14 +525,16 @@ describe('useLazyQuery Hook', () => {
     const execute = result.current[0];
     setTimeout(() => execute());
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      // TODO: FIXME
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
 
-    // TODO: FIXME
-    expect(result.current[1].loading).toBe(true);
     expect(result.current[1].data).toEqual({ hello: 'from cache' });
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'from link' });
   });
 
@@ -516,7 +547,7 @@ describe('useLazyQuery Hook', () => {
         delay: 20,
       },
     ];
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       () => useLazyQuery(query),
       {
         wrapper: ({ children }) => (
@@ -533,11 +564,13 @@ describe('useLazyQuery Hook', () => {
     const mock = jest.fn();
     setTimeout(() => mock(execute()));
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(true);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(true);
+    }, { interval: 1 });
 
-    await waitForNextUpdate();
-    expect(result.current[1].loading).toBe(false);
+    await waitFor(() => {
+      expect(result.current[1].loading).toBe(false);
+    }, { interval: 1 });
     expect(result.current[1].data).toEqual({ hello: 'world' });
 
     expect(mock).toHaveBeenCalledTimes(1);

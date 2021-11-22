@@ -1,8 +1,7 @@
 import React, { Fragment } from 'react';
 import { DocumentNode, GraphQLError } from 'graphql';
 import gql from 'graphql-tag';
-import { act } from 'react-dom/test-utils';
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import {
   ApolloClient,
@@ -34,15 +33,16 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query),
         { wrapper },
       );
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world" });
     });
 
@@ -60,15 +60,16 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         () => useQuery(query),
         { wrapper }
       );
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world" });
 
       rerender();
@@ -90,7 +91,7 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query),
         { wrapper },
       );
@@ -102,8 +103,9 @@ describe('useQuery Hook', () => {
         stopPolling,
         subscribeToMore,
       } = result.current;
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(refetch).toBe(result.current.refetch);
       expect(fetchMore).toBe(result.current.fetchMore);
       expect(startPolling).toBe(result.current.startPolling);
@@ -157,24 +159,26 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ id }) => useQuery(query, { variables: { id }}),
         { wrapper, initialProps: { id: 1 } },
       );
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       rerender({ id: 2 });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 2" });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 2" });
     });
 
     it('should return the same results for the same variables', async () => {
@@ -200,24 +204,26 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ id }) => useQuery(query, { variables: { id } }),
         { wrapper, initialProps: { id: 1 } },
       );
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
 
 
       rerender({ id: 2 });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 2" });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 2" });
 
       rerender({ id: 2 });
       expect(result.current.loading).toBe(false);
@@ -251,31 +257,34 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ name }) => useQuery(query, { variables: { name } }),
         { wrapper, initialProps: { name: "" } },
       );
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ names: ["Alice", "Bob", "Eve"] });
 
       rerender({ name: 'z' });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ names: [] });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ names: [] });
 
       rerender({ name: 'zz' });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ names: [] });
     });
 
@@ -349,7 +358,7 @@ describe('useQuery Hook', () => {
 
       waitFor(() => {
         expect(renderCount).toBe(6);
-      }).finally(() => {
+      }, { interval: 1 }).finally(() => {
         console.error = consoleError;
       }).then(resolve, reject);
     });
@@ -386,7 +395,7 @@ describe('useQuery Hook', () => {
         },
       ];
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { ssr: false }),
         {
           wrapper: ({ children }) => (
@@ -397,8 +406,9 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world" });
     });
 
@@ -450,7 +460,7 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         () => [
           useQuery(query1, { fetchPolicy: "no-cache" }),
           useQuery(query2),
@@ -469,16 +479,18 @@ describe('useQuery Hook', () => {
       expect(result.current[1].loading).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current[0].loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current[0].loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current[0].data).toEqual(allPeopleData);
       expect(result.current[1].loading).toBe(true);
       expect(result.current[1].data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current[1].loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current[0].loading).toBe(false);
       expect(result.current[0].data).toEqual(allPeopleData);
-      expect(result.current[1].loading).toBe(false);
       expect(result.current[1].data).toEqual(allThingsData);
 
       rerender();
@@ -503,7 +515,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ query }) => useQuery(query, { pollInterval: 10 }),
         {
           wrapper: ({ children }) => (
@@ -519,8 +531,9 @@ describe('useQuery Hook', () => {
       rerender({ query: query2 });
       expect(result.current.loading).toBe(true);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(mocks[1].result.data);
     });
 
@@ -543,7 +556,7 @@ describe('useQuery Hook', () => {
 
       cache.writeQuery({ query, data: { hello: 'from cache' }});
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { fetchPolicy: 'cache-and-network' }),
         {
           wrapper: ({ children }) => (
@@ -558,7 +571,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toEqual({ hello: 'from cache' });
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'from link' });
     });
@@ -578,7 +593,7 @@ describe('useQuery Hook', () => {
         data: { hello: 'from cache' },
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { fetchPolicy: 'network-only' }),
         {
           wrapper: ({ children }) => (
@@ -592,8 +607,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: 'from link' });
     });
 
@@ -613,7 +629,7 @@ describe('useQuery Hook', () => {
       });
 
       const client = new ApolloClient({ link, cache, ssrMode: true, });
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { fetchPolicy: 'network-only' }),
         {
           wrapper: ({ children }) => (
@@ -627,8 +643,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'from cache' });
 
-      await expect(waitForNextUpdate({ timeout: 20 }))
-        .rejects.toThrow('Timed out');
+      await expect(waitFor(() => {
+        expect(result.current.data).toEqual({ hello: 'from link' });
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
     });
 
     it('should not hang when ssrMode is true but the cache is not populated for some reason', async () => {
@@ -646,7 +663,7 @@ describe('useQuery Hook', () => {
         ssrMode: true,
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query),
         {
           wrapper: ({ children }) => (
@@ -660,8 +677,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: 'from link' });
     });
   });
@@ -689,7 +707,7 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { pollInterval: 10 }),
         { wrapper },
       );
@@ -697,23 +715,29 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 1" });
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 1" });
 
-      await waitForNextUpdate();
-
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 2" });
-
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 2" });
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 3" });
 
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 3" });
+      }, { interval: 1 });
+
+      expect(result.current.loading).toBe(false);
+
+      const { data: previousData } = result.current;
       result.current.stopPolling();
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitFor(() => {
+        expect(result.current.data).not.toEqual(previousData);
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
     });
 
     it('should start polling when skip goes from true to false', async () => {
@@ -737,7 +761,7 @@ describe('useQuery Hook', () => {
       ];
 
       const cache = new InMemoryCache();
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ skip }) => useQuery(query, { pollInterval: 10, skip }),
         {
           wrapper: ({ children }) => (
@@ -752,7 +776,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: "world 1" });
@@ -761,19 +787,23 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
 
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 1" });
+      }, { interval: 1, timeout: 20 })).rejects.toThrow()
 
       rerender({ skip: false });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: "world 1" });
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 2" });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 2" });
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 3" });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 3" });
     });
 
     it('should stop polling when component unmounts', async () => {
@@ -803,7 +833,7 @@ describe('useQuery Hook', () => {
         <MockedProvider link={link} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate, unmount } = renderHook(
+      const { result, unmount } = renderHook(
         () => useQuery(query, { pollInterval: 10 }),
         { wrapper },
       );
@@ -811,13 +841,16 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
+      expect(requestSpy).toHaveBeenCalledTimes(1);
 
       unmount();
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
-      expect(requestSpy).toHaveBeenCalledTimes(1);
+      await expect(waitFor(() => {
+        expect(requestSpy).not.toHaveBeenCalledTimes(1);
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
       expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
 
@@ -852,7 +885,7 @@ describe('useQuery Hook', () => {
         </React.StrictMode>
       );
 
-      const { result, waitForNextUpdate, unmount } = renderHook(
+      const { result, unmount } = renderHook(
         () => useQuery(query, { pollInterval: 10 }),
         { wrapper },
       );
@@ -860,14 +893,17 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
+      expect(requestSpy).toHaveBeenCalledTimes(1);
 
       unmount();
 
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
-      expect(requestSpy).toHaveBeenCalledTimes(1);
+      await expect(waitFor(() => {
+        expect(requestSpy).not.toHaveBeenCalledTimes(1);
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
       expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
 
@@ -895,7 +931,7 @@ describe('useQuery Hook', () => {
         </React.StrictMode>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { pollInterval: 20 }),
         { wrapper },
       );
@@ -903,21 +939,24 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: "world 1" });
 
       result.current.stopPolling();
-      const nextUpdate = waitForNextUpdate();
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 2" });
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
       result.current.startPolling(20);
 
       expect(requestSpy).toHaveBeenCalledTimes(1);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
-      await nextUpdate;
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: "world 2" });
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 2" });
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
@@ -938,7 +977,7 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate, unmount } = renderHook(
+      const { result, unmount } = renderHook(
         () => useQuery(query),
         { wrapper },
       );
@@ -946,9 +985,10 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
 
       unmount();
@@ -980,15 +1020,16 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query),
         { wrapper },
       );
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe('error');
     });
@@ -1017,7 +1058,7 @@ describe('useQuery Hook', () => {
       );
 
       const onError = jest.fn();
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           onError,
           notifyOnNetworkStatusChange: true,
@@ -1028,9 +1069,10 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.loading).toBe(false);
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe('error');
 
@@ -1038,11 +1080,15 @@ describe('useQuery Hook', () => {
       expect(onError).toHaveBeenCalledTimes(1);
 
       result.current.refetch();
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(true);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
       expect(onError).toHaveBeenCalledTimes(1);
@@ -1065,8 +1111,9 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
-        () => useQuery(query),
+      let updates = 0;
+      const { result, rerender } = renderHook(
+        () => (updates++, useQuery(query)),
         { wrapper },
       );
 
@@ -1074,7 +1121,9 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
@@ -1088,7 +1137,10 @@ describe('useQuery Hook', () => {
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe('error');
 
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      let previousUpdates = updates;
+      await expect(waitFor(() => {
+        expect(updates).not.toEqual(previousUpdates)
+      }, { interval: 1, timeout: 20 })).rejects.toThrow()
     });
 
     it('should persist errors on re-render with inline onError/onCompleted callbacks',  async () => {
@@ -1112,8 +1164,9 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
-        () => useQuery(query, { onError: () => {}, onCompleted: () => {} }),
+      let updates = 0;
+      const { result, rerender } = renderHook(
+        () => (updates++, useQuery(query, { onError: () => {}, onCompleted: () => {} })),
         { wrapper },
       );
 
@@ -1121,7 +1174,9 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
@@ -1136,7 +1191,10 @@ describe('useQuery Hook', () => {
       expect(result.current.error!.message).toBe('error');
 
       expect(onErrorFn).toHaveBeenCalledTimes(0);
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      let previousUpdates = updates;
+      await expect(waitFor(() => {
+        expect(updates).not.toEqual(previousUpdates)
+      }, { interval: 1, timeout: 20 })).rejects.toThrow()
     });
 
     it('should not persist errors when variables change', async () => {
@@ -1176,7 +1234,7 @@ describe('useQuery Hook', () => {
         },
       ];
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ id }) => useQuery(query, { variables: { id } }),
         {
           wrapper: ({ children }) => (
@@ -1192,7 +1250,9 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
@@ -1204,7 +1264,9 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world 2' });
       expect(result.current.error).toBe(undefined);
@@ -1214,7 +1276,9 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world 1' });
       expect(result.current.error).toBe(undefined);
@@ -1245,7 +1309,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
@@ -1254,7 +1318,9 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -1263,13 +1329,15 @@ describe('useQuery Hook', () => {
       const catchFn = jest.fn();
 
       result.current.refetch().catch(catchFn);
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(true);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      }, { interval: 1 });
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe('error 2');
@@ -1305,7 +1373,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
@@ -1314,9 +1382,10 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.error!.message).toBe('same error');
@@ -1370,7 +1439,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
@@ -1379,7 +1448,9 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
@@ -1387,27 +1458,32 @@ describe('useQuery Hook', () => {
       expect(result.current.error!.message).toBe('same error');
 
       result.current.refetch();
-
-      await waitForNextUpdate();
+      await act(async () => {
+        await Promise.resolve()
+      })
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
       expect(result.current.error).toBe(undefined);
 
       const catchFn = jest.fn();
       result.current.refetch().catch(catchFn);
+      await waitFor(() =>  {
+        expect(result.current.loading).toBe(true);
+      }, { interval: 1 })
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(true);
       expect(result.current.data).toEqual({ hello: 'world' });
       expect(result.current.error).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       // TODO: Is this correct behavior here?
       expect(result.current.data).toEqual({ hello: 'world' });
       expect(result.current.error).toBeInstanceOf(ApolloError);
@@ -1445,7 +1521,7 @@ describe('useQuery Hook', () => {
 
       const onCompleted = jest.fn();
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ variables }) => useQuery(query, { variables, onCompleted }),
         {
           wrapper: ({ children }) => (
@@ -1461,15 +1537,17 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(data1);
 
       rerender({ variables: { first: 2 } });
       expect(result.current.loading).toBe(true);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(data2);
 
       rerender({ variables: { first: 1 } });
@@ -1528,7 +1606,7 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { variables: { limit: 2 } }),
         { wrapper },
       );
@@ -1537,10 +1615,12 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
+      // TODO: await?
       act(() => void result.current.fetchMore({
         variables: { limit: 2 },
         updateQuery: (prev, { fetchMoreResult }) => ({
@@ -1548,10 +1628,11 @@ describe('useQuery Hook', () => {
         }),
       }));
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ letters: ab.concat(cd) });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.data).toEqual({ letters: ab.concat(cd) });
 
       warnSpy.mockRestore();
     });
@@ -1564,7 +1645,7 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           variables: { limit: 2 },
           notifyOnNetworkStatusChange: true,
@@ -1576,9 +1657,10 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
-      expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
 
@@ -1593,7 +1675,9 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.fetchMore);
       expect(result.current.data).toEqual({ letters: ab });
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
@@ -1616,7 +1700,7 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { variables: { limit: 2 } }),
         { wrapper },
       );
@@ -1625,16 +1709,19 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
       result.current.fetchMore({ variables: { limit: 2 } });
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ letters: ab.concat(cd) });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.data).toEqual({ letters: ab.concat(cd) });
     });
 
     it('fetchMore with concatPagination and notifyOnNetworkStatusChange', async () => {
@@ -1652,7 +1739,7 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           variables: { limit: 2 },
           notifyOnNetworkStatusChange: true,
@@ -1664,7 +1751,9 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
@@ -1674,7 +1763,9 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.fetchMore);
       expect(result.current.data).toEqual({ letters: ab });
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
@@ -1763,7 +1854,7 @@ describe('useQuery Hook', () => {
         ]} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(GET_COUNTRIES),
         { wrapper },
       );
@@ -1771,8 +1862,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBeUndefined();
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ countries });
     });
   });
@@ -1802,7 +1894,7 @@ describe('useQuery Hook', () => {
         <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           variables: { id: 1 },
           notifyOnNetworkStatusChange: true,
@@ -1813,17 +1905,20 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: 'world 1' });
 
       result.current.refetch({ id: 2 });
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(true);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      }, { interval: 1 });
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: 'world 2' });
     });
 
@@ -1848,7 +1943,7 @@ describe('useQuery Hook', () => {
 
       const cache = new InMemoryCache();
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           notifyOnNetworkStatusChange: true,
         }),
@@ -1864,29 +1959,39 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: 'world 1' });
 
+      // TODO: await-act?
       result.current.refetch();
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(true);
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: 'world 1' });
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.error).toBeInstanceOf(ApolloError);
       expect(result.current.data).toEqual({ hello: 'world 1' });
 
+      // TODO: await-act?
       result.current.refetch();
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(true);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      }, { interval: 1 });
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: 'world 1' });
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toEqual({ hello: 'world 2' });
@@ -1947,7 +2052,7 @@ describe('useQuery Hook', () => {
           <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
         );
 
-        const { result, waitForNextUpdate } = renderHook(
+        const { result } = renderHook(
           () => useQuery(query, {
             variables: { min: 0, max: 12 },
             notifyOnNetworkStatusChange: true,
@@ -1962,8 +2067,9 @@ describe('useQuery Hook', () => {
         expect(result.current.data).toBe(undefined);
         expect(typeof result.current.refetch).toBe('function');
 
-        await waitForNextUpdate();
-        expect(result.current.loading).toBe(false);
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        }, { interval: 1 });
         expect(result.current.error).toBeUndefined();
         expect(result.current.data).toEqual({ primes: [2, 3, 5, 7, 11] });
         expect(mergeParams).toEqual([
@@ -1974,7 +2080,9 @@ describe('useQuery Hook', () => {
         const thenFn = jest.fn();
         result.current.refetch({ min: 12, max: 30 }).then(thenFn);
 
-        await waitForNextUpdate();
+        await waitFor(() => {
+          expect(result.current.loading).toBe(true);
+        }, { interval: 1 });
         expect(result.current.loading).toBe(true);
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({
@@ -1986,9 +2094,10 @@ describe('useQuery Hook', () => {
         // called refetch with new variables.
         expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
 
-        await waitForNextUpdate();
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        }, { interval: 1 });
 
-        expect(result.current.loading).toBe(false);
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({ primes: [13, 17, 19, 23, 29] });
         expect(mergeParams).toEqual([
@@ -2028,7 +2137,7 @@ describe('useQuery Hook', () => {
           <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
         );
 
-        const { result, waitForNextUpdate } = renderHook(
+        const { result } = renderHook(
           () => useQuery(query, {
             variables: { min: 0, max: 12 },
             notifyOnNetworkStatusChange: true,
@@ -2043,8 +2152,9 @@ describe('useQuery Hook', () => {
         expect(result.current.data).toBe(undefined);
         expect(typeof result.current.refetch).toBe('function');
 
-        await waitForNextUpdate();
-        expect(result.current.loading).toBe(false);
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        }, { interval: 1 });
         expect(result.current.error).toBeUndefined();
         expect(result.current.data).toEqual({ primes: [2, 3, 5, 7, 11] });
         expect(mergeParams).toEqual([
@@ -2055,8 +2165,9 @@ describe('useQuery Hook', () => {
         const thenFn = jest.fn();
         result.current.refetch({ min: 12, max: 30 }).then(thenFn);
 
-        await waitForNextUpdate();
-        expect(result.current.loading).toBe(true);
+        await waitFor(() => {
+          expect(result.current.loading).toBe(true);
+        }, { interval: 1 });
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({
           // We get the stale data because we configured keyArgs: false.
@@ -2065,7 +2176,9 @@ describe('useQuery Hook', () => {
         // This networkStatus is setVariables instead of refetch because we
         // called refetch with new variables.
         expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
-        await waitForNextUpdate();
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        }, { interval: 1 });
 
         expect(result.current.loading).toBe(false);
         expect(result.current.error).toBe(undefined);
@@ -2114,7 +2227,7 @@ describe('useQuery Hook', () => {
           <MockedProvider mocks={mocks} cache={cache}>{children}</MockedProvider>
         );
 
-        const { result, waitForNextUpdate } = renderHook(
+        const { result } = renderHook(
           () => useQuery(query, {
             variables: { min: 0, max: 12 },
             notifyOnNetworkStatusChange: true,
@@ -2128,8 +2241,9 @@ describe('useQuery Hook', () => {
         expect(result.current.data).toBe(undefined);
         expect(typeof result.current.refetch).toBe('function');
 
-        await waitForNextUpdate();
-        expect(result.current.loading).toBe(false);
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        }, { interval: 1 });
         expect(result.current.error).toBeUndefined();
         expect(result.current.data).toEqual({ primes: [2, 3, 5, 7, 11] });
         expect(mergeParams).toEqual([
@@ -2140,8 +2254,9 @@ describe('useQuery Hook', () => {
         const thenFn = jest.fn();
         result.current.refetch({ min: 12, max: 30 }).then(thenFn);
 
-        await waitForNextUpdate();
-        expect(result.current.loading).toBe(true);
+        await waitFor(() => {
+          expect(result.current.loading).toBe(true);
+        }, { interval: 1 });
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({
           // We get the stale data because we configured keyArgs: false.
@@ -2152,9 +2267,10 @@ describe('useQuery Hook', () => {
         // called refetch with new variables.
         expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
 
-        await waitForNextUpdate();
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false);
+        }, { interval: 1 });
 
-        expect(result.current.loading).toBe(false);
         expect(result.current.error).toBe(undefined);
         expect(result.current.data).toEqual({ primes: [13, 17, 19, 23, 29] });
         expect(mergeParams).toEqual([
@@ -2191,11 +2307,12 @@ describe('useQuery Hook', () => {
       );
 
       const onCompleted = jest.fn();
-      const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, {
+      let updates = 0;
+      const { result } = renderHook(
+        () => (updates++, useQuery(query, {
           fetchPolicy: 'cache-only',
           onCompleted,
-        }),
+        })),
         { wrapper },
       );
 
@@ -2203,7 +2320,10 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual({ hello: 'world' });
       expect(onCompleted).toHaveBeenCalledTimes(1);
       expect(onCompleted).toHaveBeenCalledWith({ hello: 'world' });
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      let previousUpdates = updates;
+      await expect(waitFor(() => {
+        expect(updates).not.toEqual(previousUpdates)
+      }, { interval: 1, timeout: 20 })).rejects.toThrow()
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
 
@@ -2224,7 +2344,7 @@ describe('useQuery Hook', () => {
       );
 
       const onCompleted = jest.fn();
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         () => useQuery(query, {
           onCompleted,
         }),
@@ -2234,7 +2354,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
@@ -2266,7 +2388,7 @@ describe('useQuery Hook', () => {
       );
 
       const onCompleted = jest.fn();
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           skip: true,
           onCompleted,
@@ -2277,7 +2399,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
 
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitFor(() => {
+        expect(onCompleted).not.toHaveBeenCalledTimes(0);
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
       expect(onCompleted).toHaveBeenCalledTimes(0);
     });
 
@@ -2298,22 +2422,30 @@ describe('useQuery Hook', () => {
       );
 
       const onCompleted = jest.fn();
-      const { result, waitForNextUpdate } = renderHook(
-        () => useQuery(query, {
-          fetchPolicy: 'network-only',
-          onCompleted,
-        }),
+      let updates = 0;
+      const { result } = renderHook(
+        () => {
+          const pendingResult = useQuery(query, {
+            fetchPolicy: 'network-only',
+            onCompleted,
+          });
+          updates++;
+
+          return pendingResult;
+        },
         { wrapper },
       );
 
       expect(result.current.loading).toBe(true);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: 'world' });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      const previousUpdates = updates
+      await expect(waitFor(() => {
+        expect(updates).not.toEqual(previousUpdates)
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
 
@@ -2336,7 +2468,7 @@ describe('useQuery Hook', () => {
 
       const cache = new InMemoryCache();
       const onCompleted = jest.fn();
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           onCompleted,
           pollInterval: 10,
@@ -2352,19 +2484,22 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(true);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: 'world 1' });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: 'world 1' });
       expect(onCompleted).toHaveBeenCalledTimes(1);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: 'world 2' });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: 'world 2' });
       expect(onCompleted).toHaveBeenCalledTimes(2);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.data).toEqual({ hello: 'world 3' });
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: 'world 3' });
       expect(onCompleted).toHaveBeenCalledTimes(3);
     });
   });
@@ -2436,7 +2571,7 @@ describe('useQuery Hook', () => {
       );
 
       const onError = jest.fn();
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => ({
           mutation: useMutation(mutation, {
             optimisticResponse: { addCar: carData },
@@ -2474,7 +2609,9 @@ describe('useQuery Hook', () => {
       expect(result.current.query.loading).toBe(true);
       const mutate = result.current.mutation[0];
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.query.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(carsData);
 
@@ -2486,18 +2623,21 @@ describe('useQuery Hook', () => {
       expect(result.current.mutation[1].loading).toBe(true);
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(allCarsData);
-      await waitForNextUpdate();
-      // TODO: There is a missing update here because mutation and query update
-      // in the same microtask loop.
-      const previous = result.all[result.all.length - 2];
-      if (previous instanceof Error) {
-        throw previous;
-      }
+
+
+      expect(onError).toHaveBeenCalledTimes(0);
+      await act(async () => {
+        await Promise.resolve();
+      });
 
       // The mutation ran and is loading the result. The query stays at
       // not loading as nothing has changed for the query.
-      expect(previous.mutation[1].loading).toBe(true);
-      expect(previous.query.loading).toBe(false);
+      expect(result.current.mutation[1].loading).toBe(true);
+      expect(result.current.query.loading).toBe(false);
+
+      await waitFor(() => {
+        expect(result.current.mutation[1].loading).toBe(false);
+      })
 
       // The mutation has completely finished, leaving the query with access to
       // the original cache data.
@@ -2534,7 +2674,7 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           partialRefetch: true,
           notifyOnNetworkStatusChange: true,
@@ -2553,22 +2693,24 @@ describe('useQuery Hook', () => {
       expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
       expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
       errorSpy.mockRestore();
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
       expect(result.current.error).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
     });
 
     it('should attempt a refetch when data is missing and partialRefetch is true 2', async () => {
@@ -2598,7 +2740,7 @@ describe('useQuery Hook', () => {
         cache: new InMemoryCache(),
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           partialRefetch: true,
           notifyOnNetworkStatusChange: true,
@@ -2617,21 +2759,23 @@ describe('useQuery Hook', () => {
       expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
       expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
       errorSpy.mockRestore();
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data);
       expect(result.current.error).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
     });
 
     it('should attempt a refetch when data is missing, partialRefetch is true and addTypename is false for the cache', async () => {
@@ -2664,7 +2808,7 @@ describe('useQuery Hook', () => {
         </ApolloProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, {
           partialRefetch: true,
           notifyOnNetworkStatusChange: true,
@@ -2677,22 +2821,24 @@ describe('useQuery Hook', () => {
       expect(result.current.error).toBe(undefined);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(true);
       expect(result.current.error).toBe(undefined);
       expect(result.current.data).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
       expect(errorSpy.mock.calls[0][0]).toMatch('Missing field');
       errorSpy.mockRestore();
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ hello: 'world' });
       expect(result.current.error).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
     });
   });
 
@@ -2767,14 +2913,16 @@ describe('useQuery Hook', () => {
         </ApolloProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { variables: { id: entityId } }),
         { wrapper },
       );
 
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({
@@ -2796,14 +2944,15 @@ describe('useQuery Hook', () => {
         });
       });
 
-      await waitForNextUpdate();
-      expect(result.current.data).toEqual({
-        clientEntity: {
-          id: entityId,
-          title: longerTitle,
-          titleLength: longerTitle.length,
-          __typename: "ClientData",
-        },
+      await waitFor(() => {
+        expect(result.current.data).toEqual({
+          clientEntity: {
+            id: entityId,
+            title: longerTitle,
+            titleLength: longerTitle.length,
+            __typename: "ClientData",
+          },
+        });
       });
     });
   });
@@ -2840,21 +2989,24 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ skip }) => useQuery(query, { skip }),
         { wrapper, initialProps: { skip: true }  },
       );
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+      await expect(waitFor(() => {
+        expect(result.current.data).not.toBe(undefined);
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
 
       rerender({ skip: false });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBeFalsy();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: 'world' });
     });
 
@@ -2875,7 +3027,7 @@ describe('useQuery Hook', () => {
         </ApolloProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ skip, variables }) => useQuery(query, { skip, variables }),
         { wrapper, initialProps: { skip: false, variables: undefined as any } },
       );
@@ -2883,8 +3035,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: 'world' });
 
       rerender({ skip: true, variables: { someVar: true } });
@@ -2923,7 +3076,7 @@ describe('useQuery Hook', () => {
           result: { data: { hello: 'world' } },
         },
       ];
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
         {
           wrapper: ({ children }) => (
@@ -2937,14 +3090,18 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      await expect(waitForNextUpdate({ timeout: 20 })).rejects.toThrow('Timed out');
+
+      await expect(waitFor(() => {
+        expect(result.current.loading).toEqual(true);
+      }, { interval: 1, timeout: 20 })).rejects.toThrow();
 
       rerender({ fetchPolicy: 'cache-first' });
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBeFalsy();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual({ hello: 'world' });
     });
 
@@ -2960,7 +3117,7 @@ describe('useQuery Hook', () => {
         link,
       });
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { skip: true }),
         {
           wrapper: ({ children }) => (
@@ -2973,11 +3130,12 @@ describe('useQuery Hook', () => {
 
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
-      await expect(waitForNextUpdate({ timeout: 20 }))
-        .rejects.toThrow('Timed out');
-      result.current.refetch();
-      await expect(waitForNextUpdate({ timeout: 20 }))
-        .rejects.toThrow('Timed out');
+      await act(async () => {
+        await Promise.resolve();
+      });
+      await act(async () => {
+        await result.current.refetch();
+      });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toBe(undefined);
       expect(requestSpy).toHaveBeenCalledTimes(0);
@@ -3027,7 +3185,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(carQuery, { variables: { id: 1 } }),
         { wrapper },
       );
@@ -3035,7 +3193,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toBe(undefined);
       expect(result.current.error).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(carData);
       expect(result.current.error).toBeUndefined();
@@ -3239,7 +3399,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
@@ -3248,19 +3408,23 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.previousData).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toBe(undefined);
 
       setTimeout(() => result.current.refetch());
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(true);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toEqual(data1);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(data2);
       expect(result.current.previousData).toEqual(data1);
     });
@@ -3325,7 +3489,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper },
       );
@@ -3334,14 +3498,17 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toBe(undefined);
       expect(result.current.previousData).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toBe(undefined);
 
       setTimeout(() => result.current.refetch());
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(true);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(true);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toEqual(data1);
 
@@ -3350,8 +3517,9 @@ describe('useQuery Hook', () => {
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toEqual(data1);
 
-      await waitForNextUpdate();
-      expect(result.current.loading).toBe(false);
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.data).toEqual(data3);
       expect(result.current.previousData).toEqual(data1);
     });
@@ -3406,7 +3574,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ gender }) => useQuery(query, {
           variables: { gender },
           fetchPolicy: 'network-only',
@@ -3417,7 +3585,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.networkStatus).toBe(NetworkStatus.loading);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
@@ -3430,7 +3600,9 @@ describe('useQuery Hook', () => {
       expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
       expect(result.current.data).toBe(undefined);
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({
@@ -3443,7 +3615,9 @@ describe('useQuery Hook', () => {
       expect(result.current.loading).toBe(true);
       expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
       expect(result.current.data).toBe(undefined);
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
 
       expect(result.current.loading).toBe(false);
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
@@ -3494,7 +3668,7 @@ describe('useQuery Hook', () => {
         </MockedProvider>
       );
 
-      const { result, rerender, waitForNextUpdate } = renderHook(
+      const { result, rerender } = renderHook(
         ({ canonizeResults }) => useQuery(query, {
           fetchPolicy: 'cache-only',
           canonizeResults,
@@ -3527,7 +3701,9 @@ describe('useQuery Hook', () => {
         });
       });
 
-      await waitForNextUpdate();
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      }, { interval: 1 });
       expect(result.current.loading).toBe(false);
       expect(result.current.data).toEqual({ results });
       expect(result.current.data.results.length).toBe(7);
@@ -3618,7 +3794,7 @@ describe('useQuery Hook', () => {
       await waitFor(() => {
         expect(result.current.a.loading).toBe(false);
         expect(result.current.b.loading).toBe(false);
-      });
+      }, { interval: 1 });
       expect(result.current.a.data).toEqual(aData);
       expect(result.current.b.data).toEqual(bData);
     }

@@ -405,7 +405,7 @@ describe('useLazyQuery Hook', () => {
     result.current[1].stopPolling();
     await expect(waitFor(() => {
       expect(result.current).not.toBe(previousResult)
-    }, { interval: 1, timeout: 20 })).rejects.toThrow('data stayed the same. this is intended');
+    }, { interval: 1, timeout: 20 })).rejects.toThrow();
   });
 
   it('should persist previous data when a query is re-run and variable changes', async () => {
